@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  node:
+    container_name: easypay-node
+    build:
+      context: .
+      dockerfile: /docker/node/Dockerfile
+    volumes:
+      - ./src:/usr/easypay/src
+    env_file:
+      - .env
+    expose:
+      - ${PORT}
+    ports:
+      - ${PORT}:${PORT}
+    command: dockerize -wait tcp://mysql:${DATABASE_PORT} -timeout 60s yarn start
+    networks:
+      - easypay-network
+
+  mysql:
+    container_name: easypay-mysql
+    build:
+      context: .
+      dockerfile: /docker/mysql/Dockerfile
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql
+    hostname: easypay-mysql
+    expose:
+      - ${DATABASE_PORT}
+    ports:
+      - ${DATABASE_PORT}:${DATABASE_PORT}
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+    networks:
+      - easypay-network
+
+networks:
+  easypay-network:
+    driver: bridge
